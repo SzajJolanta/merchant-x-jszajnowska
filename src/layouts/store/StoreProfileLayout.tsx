@@ -1,24 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useStoreProfileStore } from "@/stores/useStoreProfileStore";
 import { getNdk } from "@/services/ndkService";
+import { useLocation } from "wouter";
 
 const StoreProfileLayout: React.FC = () => {
-    const { profile, fetchProfile, updateProfile } = useStoreProfileStore();
+    const { profile, fetchProfile } = useStoreProfileStore();
+    const [, setPubkey] = useState<string | null>(null);
+    const [, navigate] = useLocation();
 
-    const [form, setForm] = useState({
-        name: "",
-        display_name: "",
-        about: "",
-        website: "",
-        nip05: "",
-        lud16: "",
-        picture: "",
-        banner: "",
-    });
-
-    const [pubkey, setPubkey] = useState<string | null>(null);
-
-    // Get the current user's pubkey on mount
     useEffect(() => {
         (async () => {
             const ndk = await getNdk();
@@ -30,114 +19,62 @@ const StoreProfileLayout: React.FC = () => {
         })();
     }, [fetchProfile]);
 
-    // Sync form when profile is loaded
-    useEffect(() => {
-        if (profile) {
-            setForm({
-                name: profile.name ?? "",
-                display_name: profile.display_name ?? "",
-                about: profile.about ?? "",
-                website: profile.website ?? "",
-                nip05: profile.nip05 ?? "",
-                lud16: profile.lud16 ?? "",
-                picture: profile.picture ?? "",
-                banner: profile.banner ?? "",
-            });
-        }
-    }, [profile]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async () => {
-        if (!pubkey) return;
-        await updateProfile(pubkey, form);
-    };
-
-    const handleCancel = () => {
-        if (pubkey) fetchProfile(pubkey);
-    };
-
     return (
-        <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-            <h1 className="text-2xl font-bold">Store Profile</h1>
-
-            {/* BANNER PREVIEW */}
-            {form.banner && (
-                <div className="mb-4">
-                    <label className="block font-medium text-sm mb-1">Banner Preview</label>
+        <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+            {/* Banner + Avatar */}
+            <div className="relative">
+                {profile?.banner ? (
                     <img
-                        src={form.banner}
-                        alt="Banner Preview"
-                        className="w-full h-32 object-cover rounded-md border"
+                        src={profile.banner}
+                        alt="Banner"
+                        className="w-full h-48 object-cover rounded-md"
                     />
-                </div>
-            )}
+                ) : (
+                    <div className="w-full h-48 bg-gray-200 rounded-md" />
+                )}
 
-            {/* PROFILE PICTURE PREVIEW */}
-            {form.picture && (
-                <div className="mb-4">
-                    <label className="block font-medium text-sm mb-1">Profile Picture Preview</label>
-                    <img
-                        src={form.picture}
-                        alt="Profile Preview"
-                        className="w-20 h-20 object-cover rounded-full border"
-                    />
+                <div className="absolute -bottom-10 left-4">
+                    {profile?.picture ? (
+                        <img
+                            src={profile.picture}
+                            alt="Avatar"
+                            className="w-20 h-20 rounded-full border-4 border-white shadow-md"
+                        />
+                    ) : (
+                        <div className="w-20 h-20 rounded-full bg-gray-300 border-4 border-white shadow-md" />
+                    )}
                 </div>
-            )}
+            </div>
 
-            <div className="space-y-4">
+            {/* Profile Info */}
+            <div className="pt-12 space-y-4">
                 {[
-                    { label: "Store Name", name: "name" },
-                    { label: "Display Name", name: "display_name" },
-                    { label: "Website", name: "website" },
-                    { label: "NIP-05", name: "nip05" },
-                    { label: "Lightning Address", name: "lud16" },
-                    { label: "Profile Picture URL", name: "picture" },
-                    { label: "Banner URL", name: "banner" },
+                    { label: "Store Name", value: profile?.name },
+                    { label: "Display Name", value: profile?.display_name },
+                    { label: "Website", value: profile?.website },
+                    { label: "NIP-05", value: profile?.nip05 },
+                    { label: "Lightning Address", value: profile?.lud16 },
                 ].map((field) => (
-                    <div key={field.name}>
-                        <label className="block font-medium text-sm mb-1">
+                    <div key={field.label}>
+                        <label className="block text-sm font-medium text-gray-600">
                             {field.label}
                         </label>
-                        <input
-                            type="text"
-                            name={field.name}
-                            value={(form as any)[field.name]}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 border rounded-md"
-                        />
+                        <p className="text-gray-800">{field.value || "—"}</p>
                     </div>
                 ))}
 
                 <div>
-                    <label className="block font-medium text-sm mb-1">About (Bio)</label>
-                    <textarea
-                        name="about"
-                        value={form.about}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2 border rounded-md"
-                    />
+                    <label className="block text-sm font-medium text-gray-600">About</label>
+                    <p className="text-gray-800 whitespace-pre-line">{profile?.about || "—"}</p>
                 </div>
             </div>
 
-            <div className="flex gap-4">
-                <button
-                    onClick={handleSubmit}
-                    disabled={!pubkey}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-                >
-                    Save Changes
-                </button>
-                <button
-                    onClick={handleCancel}
-                    disabled={!pubkey}
-                    className="bg-gray-100 px-4 py-2 rounded-md hover:bg-gray-200"
-                >
-                    Cancel
-                </button>
-            </div>
+            <button
+                onClick={() => navigate("/store/edit")}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            >
+                Edit Profile
+            </button>
         </div>
     );
 };
