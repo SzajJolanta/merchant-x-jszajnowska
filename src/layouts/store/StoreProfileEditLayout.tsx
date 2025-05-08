@@ -4,12 +4,13 @@ import { getNdk } from "@/services/ndkService";
 import { useLocation } from "wouter";
 
 const StoreProfileEditLayout: React.FC = () => {
-    const { profile, fetchProfile, updateProfile } = useStoreProfileStore();
+    const { profile, fetchProfile, updateProfile, publishTestProfile, } = useStoreProfileStore();
 
     const [form, setForm] = useState({
         name: "",
         display_name: "",
         about: "",
+        tags: "",
         website: "",
         nip05: "",
         lud16: "",
@@ -39,12 +40,13 @@ const StoreProfileEditLayout: React.FC = () => {
                 name: profile.name ?? "",
                 display_name: profile.display_name ?? "",
                 about: profile.about ?? "",
+                tags: profile.tags ? JSON.stringify(profile.tags, null, 2) : "",
                 website: profile.website ?? "",
                 nip05: profile.nip05 ?? "",
                 lud16: profile.lud16 ?? "",
                 picture: profile.picture ?? "",
                 banner: profile.banner ?? "",
-            });
+            });            
         }
     }, [profile]);
 
@@ -55,6 +57,12 @@ const StoreProfileEditLayout: React.FC = () => {
     const handleSubmit = async () => {
         if (!pubkey) return;
         await updateProfile(pubkey, form);
+        navigate("/store");
+    };
+
+    const handleTest = async () => {
+        if (!pubkey) return;
+        await publishTestProfile();
         navigate("/store");
     };
 
@@ -167,6 +175,16 @@ const StoreProfileEditLayout: React.FC = () => {
                         className="w-full px-4 py-2 border rounded-md"
                     />
                 </div>
+
+                <div>
+                    <label className="block font-medium text-sm mb-1">Tags</label>
+                    <textarea
+                        name="tags"
+                        value={form.tags}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border rounded-md"
+                    />
+                </div>
             </div>
 
             <div className="flex gap-4">
@@ -181,6 +199,12 @@ const StoreProfileEditLayout: React.FC = () => {
                     className="bg-gray-100 px-4 py-2 rounded-md hover:bg-gray-200"
                 >
                     Cancel
+                </button>
+                <button
+                    onClick={handleTest}
+                    className="bg-gray-100 px-4 py-2 rounded-md hover:bg-gray-200"
+                >
+                    Test Profile Local
                 </button>
             </div>
         </div>

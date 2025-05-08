@@ -5,7 +5,6 @@ import { useLocation } from "wouter";
 
 const StoreProfileLayout: React.FC = () => {
     const { profile, fetchProfile } = useStoreProfileStore();
-    const [, setPubkey] = useState<string | null>(null);
     const [, navigate] = useLocation();
 
     useEffect(() => {
@@ -13,7 +12,6 @@ const StoreProfileLayout: React.FC = () => {
             const ndk = await getNdk();
             const user = await ndk.signer?.user();
             if (user) {
-                setPubkey(user.pubkey);
                 fetchProfile(user.pubkey);
             }
         })();
@@ -65,8 +63,25 @@ const StoreProfileLayout: React.FC = () => {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-600">About</label>
-                    <p className="text-gray-800 whitespace-pre-line">{profile?.about || "—"}</p>
+                    <p className="text-gray-800 whitespace-pre-line">
+                        {profile?.about || "—"}
+                    </p>
                 </div>
+
+                {Array.isArray(profile?.tags) && profile.tags.length > 0 && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600">
+                            Tags
+                        </label>
+                        <ul className="text-gray-700 text-sm mt-1 space-y-1">
+                            {profile.tags.map((tag, index) => (
+                                <li key={index}>
+                                    <code>[{tag.map(t => `"${t}"`).join(", ")}]</code>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
 
             <button
