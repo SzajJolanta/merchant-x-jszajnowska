@@ -87,7 +87,6 @@ export const useStoreProfileStore = create<StoreProfileStore>((set) => ({
                 tags,
                 created_at: Math.floor(Date.now() / 1000),
             });
-            console.log("[debug] merged profile before publish", merged);
             await newEvent.sign();
             await newEvent.publish();
             set({ profile: merged });
